@@ -22,7 +22,19 @@ jobs:
   sonarcloud:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Ejecutando sonar"
+      - uses: actions/checkout@v3
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          args: >
+            -Dsonar.organization=miguelch96-github
+            -Dsonar.projectKey=angular-hello-world
+            -Dsonar.projectVersion=1.0.0
+            -Dsonar.sources=./src
+          
 
   build:
     runs-on: ubuntu-latest
@@ -36,7 +48,6 @@ jobs:
         run: |
           npm ci
           npm run build
-          ls
   
 
   
