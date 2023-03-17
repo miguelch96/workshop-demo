@@ -82,16 +82,14 @@ jobs:
           docker push mchipacr.azurecr.io/angular-hello-word:${{ github.sha }} 
 
   deploy-webapp-for-container:
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/reusable-deploy-webapp.yml
+    # uses: nahumquintero/reusable-workflows/.github/workflows/reusable-deploy-webapp.yml@v1
     needs: build-publish-docker-image
-    steps:
-      - uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-      - uses: azure/webapps-deploy@v2
-        with:
-          app-name: 'mchipangulardemo'
-          images: 'mchipacr.azurecr.io/angular-hello-word:${{ github.sha }} '
+    with:
+      webapp-name: "mchipangulardemo"
+      image: "mchipacr.azurecr.io/angular-hello-word:${{ github.sha }}"
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
   
 
   
