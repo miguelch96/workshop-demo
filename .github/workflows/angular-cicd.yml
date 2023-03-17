@@ -31,7 +31,7 @@ jobs:
         with:
           args: >
             -Dsonar.organization=miguelch96-github
-            -Dsonar.projectKey=angular-hello-world
+            -Dsonar.projectKey=miguelch96-github_angular-hello-world
             -Dsonar.projectVersion=1.0.0
             -Dsonar.sources=./src
           
