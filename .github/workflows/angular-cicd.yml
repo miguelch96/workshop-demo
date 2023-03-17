@@ -81,11 +81,17 @@ jobs:
           docker build . -t mchipacr.azurecr.io/angular-hello-word:${{ github.sha }}
           docker push mchipacr.azurecr.io/angular-hello-word:${{ github.sha }} 
 
-  # deploy-webapp-for-container:
-  #   runs-on: ubuntu-latest
-  #   needs: build-publish-docker-image
-  #   steps:
-  #     - 
+  deploy-webapp-for-container:
+    runs-on: ubuntu-latest
+    needs: build-publish-docker-image
+    steps:
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'mchipangulardemo'
+          images: 'mchipacr.azurecr.io/angular-hello-word:${{ github.sha }} '
   
 
   
