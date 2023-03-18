@@ -1,0 +1,96 @@
+name: Angular CICD
+on:
+  push:
+    branches:
+      - "develop"
+  pull_request:
+
+jobs:
+
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: "Descargar dependencias y ejecutar pruebas"
+        run: |
+          npm ci
+          npm test
+
+  sonarcloud:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          args: >
+            -Dsonar.organization=miguelch96-github
+            -Dsonar.projectKey=miguelch96-github_angular-hello-world
+            -Dsonar.projectVersion=1.0.0
+            -Dsonar.sources=./src
+      # - name: SonarQube Quality Gate check
+      #   id: sonarqube-quality-gate-check
+      #   uses: sonarsource/sonarqube-quality-gate-action@master
+      #   timeout-minutes: 5
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #     SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }} 
+          
+
+  build:
+    runs-on: ubuntu-latest
+    # needs: [tests,sonarcloud]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: "Descargar dependencias y compilar"
+        run: |
+          npm ci
+          npm run build
+      - uses: actions/upload-artifact@v3
+        with:
+          name: my-artifact
+          path: |
+            Dockerfile
+            dist
+
+
+  build-publish-docker-image:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: my-artifact
+      - name: "Azure ACR Login"
+        uses: azure/docker-login@v1
+        with:
+          login-server: mchipacr.azurecr.io
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      - name: "Build and publish docker image"
+        run: |
+          docker build . -t mchipacr.azurecr.io/angular-hello-word:${{ github.sha }}
+          docker push mchipacr.azurecr.io/angular-hello-word:${{ github.sha }} 
+
+  deploy-webapp-for-container:
+    uses: ./.github/workflows/reusable-deploy-webapp.yml
+    # uses: nahumquintero/reusable-workflows/.github/workflows/reusable-deploy-webapp.yml@v1
+    needs: build-publish-docker-image
+    with:
+      webapp-name: "mchipangulardemo"
+      image: "mchipacr.azurecr.io/angular-hello-word:${{ github.sha }}"
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+  
+
+  
+    

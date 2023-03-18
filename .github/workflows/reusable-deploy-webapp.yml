@@ -1,0 +1,28 @@
+name: Reusable workflow for webapp deployments
+on: 
+  workflow_call:
+    inputs:
+      webapp-name:
+        description: "El nombre de tu webapp"
+        required: true
+        type: string
+      image:
+        description: "Imagen a desplegar"
+        required: true
+        type: string
+    secrets:
+      AZURE_CREDENTIALS:
+        required: true
+
+jobs:
+  deploy-webapp-for-container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - uses: azure/webapps-deploy@v2
+        with:
+          app-name: '${{ inputs.webapp-name }}'
+          images: '${{ inputs.image }}'
+    
